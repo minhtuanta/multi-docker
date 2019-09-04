@@ -1,0 +1,21 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t minhtuanta/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true minhtuanta/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t minhtuanta/multi-client ./client
+  - docker build -t minhtuanta/multi-nginx ./nginx
+  - docker build -t minhtuanta/multi-server ./server
+  - docker build -t minhtuanta/multi-worker ./worker
+  # Login to docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push minhtuanta/multi-client
+  - docker push minhtuanta/multi-nginx
+  - docker push minhtuanta/multi-server
+  - docker push minhtuanta/multi-worker
